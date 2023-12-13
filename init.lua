@@ -163,9 +163,10 @@ require('lazy').setup({
     'lukas-reineke/indent-blankline.nvim',
     -- Enable `lukas-reineke/indent-blankline.nvim`
     -- See `:help indent_blankline.txt`
+    main = "ibl",
     opts = {
-      char = '┊',
-      show_trailing_blankline_indent = false,
+      -- char = '┊',
+      -- show_trailing_blankline_indent = false,
     },
   },
 
@@ -235,7 +236,7 @@ require('lazy').setup({
   },
 
   {
-    'mobill/undotree',
+    'mbbill/undotree',
     keys = {
       { "<leader>u", "<cmd>UndotreeToggle<cr>", desc = "Toggle undotree" },
     },
@@ -510,7 +511,8 @@ local servers = {
   -- pyright = {},
   rust_analyzer = { filetypes = { 'rust', 'rs' } },
   tsserver = {
-    filetypes = { 'typescript', 'typescriptreact', 'typescript.tsx', 'javascript', 'javascriptreact', 'javascript.jsx' } },
+    filetypes = { 'typescript', 'typescriptreact', 'typescript.tsx', 'javascript', 'javascriptreact', 'javascript.jsx' }
+  },
   -- html = { filetypes = { 'html', 'twig', 'hbs'} },
 
   lua_ls = {
