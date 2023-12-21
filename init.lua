@@ -314,6 +314,13 @@ vim.opt.undodir = os.getenv('HOME') .. '/.config/nvim/undodir'
 -- Set scrolloff to 10 lines
 vim.opt.scrolloff = 10
 
+-- Set tapstop and whitestop
+vim.opt.ts = 4
+vim.opt.sw = 4
+
+-- Set colorcolumn highlight line length marker
+vim.opt.colorcolumn = "80"
+
 vim.keymap.set('x', '<leader>p', '"_dP', { silent = true })
 vim.keymap.set('n', '<C-t>', '<cmd>!tmux neww tmux-sessionizer<CR>', { silent = true })
 
