@@ -140,7 +140,18 @@ require('lazy').setup({
     'rose-pine/neovim',
     priority = 1000,
     config = function()
-      vim.cmd.colorscheme 'rose-pine-moon'
+      vim.cmd.colorscheme('rose-pine')
+      -- Set transparency for various highlight groups
+      vim.cmd [[
+        hi Normal guibg=NONE ctermbg=NONE
+        hi FloatBorder guibg=NONE ctermbg=NONE
+        hi NormalFloat guibg=NONE ctermbg=NONE
+        hi SignColumn guibg=NONE ctermbg=NONE
+        hi CursorLine guibg=NONE ctermbg=NONE
+        hi TelescopeNormal guibg=NONE ctermbg=NONE
+        hi TelescopePreviewNormal guibg=NONE ctermbg=NONE
+        hi TelescopeResultsNormal guibg=NONE ctermbg=NONE
+      ]]
     end,
   },
 
@@ -151,7 +162,7 @@ require('lazy').setup({
     opts = {
       options = {
         icons_enabled = false,
-        theme = 'onedark',
+        -- theme = 'onedark',
         component_separators = '|',
         section_separators = '',
       },
@@ -261,9 +272,7 @@ require('lazy').setup({
 -- [[ Setting options ]]
 -- See `:help vim.o`
 -- NOTE: You can change these options as you wish!
-
--- Set highlight on search
-vim.o.hlsearch = false
+--
 
 -- Make line numbers default
 vim.wo.number = true
@@ -301,6 +310,8 @@ vim.o.completeopt = 'menuone,noselect'
 
 -- NOTE: You should make sure your terminal supports this
 vim.o.termguicolors = true
+vim.o.winblend = 10
+vim.o.pumblend = 10
 
 -- No swap file
 vim.opt.swapfile = false
@@ -519,7 +530,9 @@ end
 --  If you want to override the default filetypes that your language server will attach to you can
 --  define the property 'filetypes' to the map in question.
 local servers = {
-  -- clangd = {},
+  clangd = {
+    filetypes = { 'c', 'cc', 'cpp' }
+  },
   -- gopls = {},
   -- pyright = {},
   rust_analyzer = { filetypes = { 'rust', 'rs' } },
