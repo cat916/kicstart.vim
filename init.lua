@@ -253,6 +253,48 @@ require('lazy').setup({
     },
   },
 
+  {
+    'dense-analysis/ale',
+    config = function()
+      -- Configuration goes here.
+      local g = vim.g
+
+      g.ale_linters = {
+        python = { 'pyright' },
+        rust = { 'rls' },
+        typescript = { 'eslint' },
+        javascript = { 'eslint' },
+        typescriptreact = { 'eslint' },
+        javascriptreact = { 'eslint' },
+      }
+
+      g.ale_fixers = {
+        python = { 'black' },
+        rust = { 'rustfmt' },
+        typescript = { 'prettier' },
+        javascript = { 'prettier' },
+        typescriptreact = { 'prettier' },
+        javascriptreact = { 'prettier' },
+      }
+
+      g.ale_javascript_eslint_use_global = 0
+      g.ale_javascript_eslint_exe = './node_module/.bin/eslint'
+      g.ale_javascript_eslint_options = '--no-ignore --config .eslintrc'
+
+      g.ale_javascript_prettier_use_global = 0
+      g.ale_javascript_prettier_exe = './node_module/.bin/prettier'
+      g.ale_javascript_prettier_options = '--no-config --config .prettierrc'
+
+      g.ale_typescript_eslint_use_global = 0
+      g.ale_typescript_eslint_exe = './node_module/.bin/eslint'
+      g.ale_typescript_eslint_options = '--no-ignore --config .eslintrc'
+
+      g.ale_typescript_prettier_use_global = 0
+      g.ale_typescript_prettier_exe = './node_module/.bin/prettier'
+      g.ale_typescript_prettier_options = '--no-config --config .prettierrc'
+    end
+  },
+
 
   -- NOTE: Next Step on Your Neovim Journey: Add/Configure additional "plugins" for kickstart
   --       These are some example plugins that I've included in the kickstart repository.
@@ -327,8 +369,8 @@ vim.opt.scrolloff = 10
 vim.opt.signcolumn = "yes"
 
 -- Set tapstop and whitestop
-vim.opt.ts = 4
-vim.opt.sw = 4
+vim.opt.ts = 2
+vim.opt.sw = 2
 
 -- Set colorcolumn highlight line length marker
 vim.opt.colorcolumn = "80"
@@ -337,9 +379,13 @@ vim.opt.colorcolumn = "80"
 vim.opt.hlsearch = true
 vim.opt.incsearch = true
 
-
+-- Set tmux session
 vim.keymap.set('x', '<leader>p', '"_dP', { silent = true })
 vim.keymap.set('n', '<C-t>', '<cmd>!tmux neww tmux-sessionizer<CR>', { silent = true })
+
+-- Set copilot
+vim.g.copilot_no_tab_map = true
+vim.api.nvim_set_keymap("i", "<C-J>", 'copilot#Accept("<CR>")', { silent = true, expr = true })
 
 -- [[ Basic Keymaps ]]
 
@@ -357,6 +403,12 @@ vim.keymap.set('v', 'K', ':m \'<-2<CR>gv=gv')
 
 -- Insert space in normal mode
 vim.keymap.set('n', 's', 'i<Space><Esc>')
+
+vim.cmd [[
+    let g:LanguageClient_serverCommands = {
+        \ 'csharp': ['omnisharp', '--languageserver']
+        \ }
+]]
 
 -- [[ Highlight on yank ]]
 -- See `:help vim.highlight.on_yank()`
@@ -397,7 +449,11 @@ vim.keymap.set('n', '<leader>/', function()
 end, { desc = '[/] Fuzzily search in current buffer' })
 
 vim.keymap.set('n', '<leader>gf', require('telescope.builtin').git_files, { desc = 'Search [G]it [F]iles' })
-vim.keymap.set('n', '<leader>sf', require('telescope.builtin').find_files, { desc = '[S]earch [F]iles' })
+vim.keymap.set('n', '<leader>sf', function()
+  require('telescope.builtin').find_files({
+    find_command = { 'rg', '--files', '--hidden', '--no-ignore', '--follow', '--iglob', '!.git', '--iglob', '!node_modules' },
+  })
+end, { desc = '[S]earch [F]iles' })
 vim.keymap.set('n', '<leader>sh', require('telescope.builtin').help_tags, { desc = '[S]earch [H]elp' })
 vim.keymap.set('n', '<leader>sw', require('telescope.builtin').grep_string, { desc = '[S]earch current [W]ord' })
 vim.keymap.set('n', '<leader>sg', require('telescope.builtin').live_grep, { desc = '[S]earch by [G]rep' })
@@ -565,7 +621,19 @@ mason_lspconfig.setup {
 
 mason_lspconfig.setup_handlers {
   function(server_name)
-    require('lspconfig')[server_name].setup {
+    local nvim_lsp = require('lspconfig')
+    if (server_name == 'intelephense') then
+      nvim_lsp.intelephense.setup {
+        capabilities = capabilities,
+        on_attach = on_attach,
+        settings = servers[server_name],
+        -- on_init = function(client)
+        --   client.server_capabilities.documentFormattingProvider = false
+        -- end,
+      }
+      return
+    end
+    nvim_lsp[server_name].setup {
       capabilities = capabilities,
       on_attach = on_attach,
       settings = servers[server_name],
