@@ -277,6 +277,8 @@ require('lazy').setup({
         javascriptreact = { 'prettier' },
       }
 
+      g.ale_fix_on_save = 1
+
       g.ale_javascript_eslint_use_global = 0
       g.ale_javascript_eslint_exe = './node_module/.bin/eslint'
       g.ale_javascript_eslint_options = '--no-ignore --config .eslintrc'
