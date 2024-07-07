@@ -271,10 +271,10 @@ require('lazy').setup({
       g.ale_fixers = {
         python = { 'black' },
         rust = { 'rustfmt' },
-        typescript = { 'prettier' },
-        javascript = { 'prettier' },
-        typescriptreact = { 'prettier' },
-        javascriptreact = { 'prettier' },
+        typescript = { 'prettier', 'eslint' },
+        javascript = { 'prettier', 'eslint' },
+        typescriptreact = { 'prettier', 'eslint' },
+        javascriptreact = { 'prettier', 'eslint' },
       }
 
       g.ale_fix_on_save = 1
@@ -422,6 +422,9 @@ vim.api.nvim_create_autocmd('TextYankPost', {
   group = highlight_group,
   pattern = '*',
 })
+
+-- [[ Autoformat ]]
+vim.api.nvim_create_autocmd("BufWritePre", { callback = function() vim.lsp.buf.format() end })
 
 -- [[ Configure Telescope ]]
 -- See `:help telescope` and `:help telescope.setup()`
@@ -604,6 +607,10 @@ local servers = {
       workspace = { checkThirdParty = false },
       telemetry = { enable = false },
     },
+  },
+
+  eslint = {
+    filetypes = { 'javascript', 'javascriptreact', 'typescript', 'typescriptreact' },
   },
 }
 
