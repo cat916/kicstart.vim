@@ -600,7 +600,7 @@ local servers = {
   -- gopls = {},
   -- pyright = {},
   rust_analyzer = { filetypes = { 'rust', 'rs' } },
-  tsserver = {
+  ts_ls = {
     filetypes = { 'typescript', 'typescriptreact', 'typescript.tsx', 'javascript', 'javascriptreact', 'javascript.jsx' }
   },
   -- html = { filetypes = { 'html', 'twig', 'hbs'} },
