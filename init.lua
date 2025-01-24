@@ -406,6 +406,9 @@ vim.keymap.set('v', 'K', ':m \'<-2<CR>gv=gv')
 -- Insert space in normal mode
 vim.keymap.set('n', 's', 'i<Space><Esc>')
 
+-- Copy the current file's full path to clipboard
+vim.keymap.set("n", "<leader>cp", ":let @+ = expand('%:p')<CR>", { desc = "Copy full file path" })
+
 vim.cmd [[
     let g:LanguageClient_serverCommands = {
         \ 'csharp': ['omnisharp', '--languageserver']
@@ -468,7 +471,7 @@ vim.keymap.set('n', '<leader>sd', require('telescope.builtin').diagnostics, { de
 -- See `:help nvim-treesitter`
 require('nvim-treesitter.configs').setup {
   -- Add languages to be installed here that you want installed for treesitter
-  ensure_installed = { 'c', 'cpp', 'go', 'lua', 'python', 'rust', 'tsx', 'javascript', 'typescript', 'vimdoc', 'vim' },
+  ensure_installed = { 'c', 'cpp', 'go', 'lua', 'python', 'rust', 'tsx', 'javascript', 'typescript' },
 
   -- Autoinstall languages that are not installed. Defaults to false (but you can change for yourself!)
   auto_install = false,
