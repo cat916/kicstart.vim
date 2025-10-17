@@ -767,7 +767,8 @@ mason_lspconfig.setup {
   ensure_installed = vim.tbl_keys(servers),
 }
 
-mason_lspconfig.setup_handlers {
+if mason_lspconfig.setup_handlers then
+  mason_lspconfig.setup_handlers {
   function(server_name)
     local nvim_lsp = require('lspconfig')
     if (server_name == 'intelephense') then
@@ -788,7 +789,8 @@ mason_lspconfig.setup_handlers {
       filetypes = (servers[server_name] or {}).filetypes,
     }
   end
-}
+  }
+end
 
 -- [[ Configure nvim-cmp ]]
 -- See `:help cmp`
