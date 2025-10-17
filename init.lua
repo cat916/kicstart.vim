@@ -253,50 +253,180 @@ require('lazy').setup({
     },
   },
 
+  -- {
+  --   'dense-analysis/ale',
+  --   config = function()
+  --     -- Configuration goes here.
+  --     local g = vim.g
+  --
+  --     g.ale_linters = {
+  --       python = { 'pyright' },
+  --       rust = { 'rls' },
+  --       typescript = { 'eslint' },
+  --       javascript = { 'eslint' },
+  --       typescriptreact = { 'eslint' },
+  --       javascriptreact = { 'eslint' },
+  --     }
+  --
+  --     g.ale_fixers = {
+  --       python = { 'black' },
+  --       rust = { 'rustfmt' },
+  --       typescript = { 'prettier', 'eslint' },
+  --       javascript = { 'prettier', 'eslint' },
+  --       typescriptreact = { 'prettier', 'eslint' },
+  --       javascriptreact = { 'prettier', 'eslint' },
+  --     }
+  --
+  --     g.ale_fix_on_save = 1
+  --
+  --     g.ale_javascript_eslint_use_global = 0
+  --     g.ale_javascript_eslint_exe = './node_module/.bin/eslint'
+  --     g.ale_javascript_eslint_options = '--no-ignore --config .eslintrc'
+  --
+  --     g.ale_javascript_prettier_use_global = 0
+  --     g.ale_javascript_prettier_exe = './node_module/.bin/prettier'
+  --     g.ale_javascript_prettier_options = '--no-config --config .prettierrc'
+  --
+  --     g.ale_typescript_eslint_use_global = 0
+  --     g.ale_typescript_eslint_exe = './node_module/.bin/eslint'
+  --     g.ale_typescript_eslint_options = '--no-ignore --config .eslintrc'
+  --
+  --     g.ale_typescript_prettier_use_global = 0
+  --     g.ale_typescript_prettier_exe = './node_module/.bin/prettier'
+  --     g.ale_typescript_prettier_options = '--no-config --config .prettierrc'
+  --   end
+  -- },
+
   {
-    'dense-analysis/ale',
+    "stevearc/conform.nvim",
+    opts = {
+      formatters_by_ft = {
+        javascript = { "biome" },
+        typescript = { "biome" },
+        json = { "biome" },
+        jsx = { "biome" },
+        tsx = { "biome" },
+        python = { "black", "isort" },
+      },
+      formatters = {
+        biome = {
+          command = "biome",
+          args = { "format", "--stdin-file-path", "$FILENAME" },
+          stdin = true,
+        },
+        -- Black formatter configuration
+        black = {
+          command = "black",
+          args = { "--quiet", "-" },
+          stdin = true,
+        },
+        -- isort formatter for import sorting
+        isort = {
+          command = "isort",
+          args = { "--profile", "black", "-", "--filename", "$FILENAME" },
+          stdin = true,
+        },
+      },
+    },
     config = function()
-      -- Configuration goes here.
-      local g = vim.g
-
-      g.ale_linters = {
-        python = { 'pyright' },
-        rust = { 'rls' },
-        typescript = { 'eslint' },
-        javascript = { 'eslint' },
-        typescriptreact = { 'eslint' },
-        javascriptreact = { 'eslint' },
-      }
-
-      g.ale_fixers = {
-        python = { 'black' },
-        rust = { 'rustfmt' },
-        typescript = { 'prettier', 'eslint' },
-        javascript = { 'prettier', 'eslint' },
-        typescriptreact = { 'prettier', 'eslint' },
-        javascriptreact = { 'prettier', 'eslint' },
-      }
-
-      g.ale_fix_on_save = 1
-
-      g.ale_javascript_eslint_use_global = 0
-      g.ale_javascript_eslint_exe = './node_module/.bin/eslint'
-      g.ale_javascript_eslint_options = '--no-ignore --config .eslintrc'
-
-      g.ale_javascript_prettier_use_global = 0
-      g.ale_javascript_prettier_exe = './node_module/.bin/prettier'
-      g.ale_javascript_prettier_options = '--no-config --config .prettierrc'
-
-      g.ale_typescript_eslint_use_global = 0
-      g.ale_typescript_eslint_exe = './node_module/.bin/eslint'
-      g.ale_typescript_eslint_options = '--no-ignore --config .eslintrc'
-
-      g.ale_typescript_prettier_use_global = 0
-      g.ale_typescript_prettier_exe = './node_module/.bin/prettier'
-      g.ale_typescript_prettier_options = '--no-config --config .prettierrc'
-    end
+      require("conform").setup()
+    end,
   },
 
+  {
+    "mfussenegger/nvim-lint",
+    opts = {
+      linters_by_ft = {
+        javascript = { "biome" },
+        typescript = { "biome" },
+        json = { "biome" },
+        jsx = { "biome" },
+        tsx = { "biome" },
+      },
+      linters = {
+        biome = {
+          cmd = "biome",
+          stdin = true,
+          args = { "check", "--output-format", "json", "--stdin-file-path", "$FILENAME" },
+          stream = "stderr",
+          ignore_exitcode = true,
+          parser = function(output, bufnr)
+            local diagnostics = {}
+            local ok, json = pcall(vim.json.decode, output)
+            if not ok or not json then
+              return diagnostics
+            end
+            for _, item in ipairs(json.diagnostics or {}) do
+              table.insert(diagnostics, {
+                lnum = item.range.start.line,
+                col = item.range.start.character,
+                end_lnum = item.range["end"].line,
+                end_col = item.range["end"].character,
+                severity = item.severity == "error" and vim.diagnostic.severity.ERROR or vim.diagnostic.severity.WARN,
+                message = item.message,
+                source = "biome",
+              })
+            end
+            return diagnostics
+          end,
+        },
+        ruff = {
+          cmd = "ruff",
+          args = { "check", "--output-format=json", "-" },
+          stdin = true,
+          parser = function(output, bufnr)
+            local diagnostics = {}
+            local ok, json_result = pcall(vim.json.decode, output)
+            if not ok or not json_result or vim.tbl_isempty(json_result) then
+              return diagnostics
+            end
+
+            for _, item in ipairs(json_result) do
+              table.insert(diagnostics, {
+                lnum = item.location.row - 1,
+                col = item.location.column - 1,
+                end_lnum = item.end_location and (item.end_location.row - 1) or nil,
+                end_col = item.end_location and (item.end_location.column - 1) or nil,
+                severity = vim.diagnostic.severity.WARN,
+                message = item.message,
+                code = item.code,
+                source = "ruff",
+              })
+            end
+            return diagnostics
+          end,
+        },
+      },
+    },
+  },
+
+  -- Make sure Biome is globally installed
+  {
+    "williamboman/mason.nvim",
+    opts = {
+      ensure_installed = {
+        "biome",
+        -- add python formatters
+        "black",
+        "isort",
+        -- add python linter
+        "ruff"
+      },
+    },
+  },
+
+  -- Automatically trigger linting
+  {
+    "nvim-lint/nvim-lint",
+    config = function()
+      vim.api.nvim_create_autocmd({ "BufWritePost", "BufEnter", "InsertLeave" }, {
+        pattern = { "*.js", "*.ts", "*.jsx", "*.tsx", "*.py" },
+        callback = function()
+          require("lint").try_lint()
+        end,
+      })
+    end,
+  },
 
   -- NOTE: Next Step on Your Neovim Journey: Add/Configure additional "plugins" for kickstart
   --       These are some example plugins that I've included in the kickstart repository.
@@ -427,7 +557,14 @@ vim.api.nvim_create_autocmd('TextYankPost', {
 })
 
 -- [[ Autoformat ]]
-vim.api.nvim_create_autocmd("BufWritePre", { callback = function() vim.lsp.buf.format() end })
+-- vim.api.nvim_create_autocmd("BufWritePre", { callback = function() vim.lsp.buf.format() end })
+
+vim.api.nvim_create_autocmd("BufWritePre", {
+  pattern = { "*.ts", "*.js", "*.tsx", "*.jsx", "*.json", "*.py" },
+  callback = function()
+    require("conform").format()
+  end,
+})
 
 -- [[ Configure Telescope ]]
 -- See `:help telescope` and `:help telescope.setup()`
@@ -459,7 +596,7 @@ end, { desc = '[/] Fuzzily search in current buffer' })
 vim.keymap.set('n', '<leader>gf', require('telescope.builtin').git_files, { desc = 'Search [G]it [F]iles' })
 vim.keymap.set('n', '<leader>sf', function()
   require('telescope.builtin').find_files({
-    find_command = { 'rg', '--files', '--hidden', '--no-ignore', '--follow', '--iglob', '!.git', '--iglob', '!node_modules', '--iglob', '!target' },
+    find_command = { 'rg', '--files', '--hidden', '--no-ignore', '--follow', '--iglob', '!.git', '--iglob', '!node_modules', '--iglob', '!target', '--iglob', '!venv', '--iglob', '!.venv' },
   })
 end, { desc = '[S]earch [F]iles' })
 vim.keymap.set('n', '<leader>sh', require('telescope.builtin').help_tags, { desc = '[S]earch [H]elp' })
@@ -598,7 +735,9 @@ local servers = {
     filetypes = { 'c', 'cc', 'cpp' }
   },
   -- gopls = {},
-  -- pyright = {},
+  pyright = {
+    filetypes = { 'python', 'py' }
+  },
   rust_analyzer = { filetypes = { 'rust', 'rs' } },
   ts_ls = {
     filetypes = { 'typescript', 'typescriptreact', 'typescript.tsx', 'javascript', 'javascriptreact', 'javascript.jsx' }
@@ -612,9 +751,9 @@ local servers = {
     },
   },
 
-  eslint = {
-    filetypes = { 'javascript', 'javascriptreact', 'typescript', 'typescriptreact' },
-  },
+  -- eslint = {
+  --   filetypes = { 'javascript', 'javascriptreact', 'typescript', 'typescriptreact' },
+  -- },
 }
 
 -- Setup neovim lua configuration
