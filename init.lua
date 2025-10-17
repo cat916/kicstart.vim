@@ -342,6 +342,7 @@ require('lazy').setup({
         json = { "biome" },
         jsx = { "biome" },
         tsx = { "biome" },
+        python = { "ruff" },
       },
       linters = {
         biome = {
@@ -398,6 +399,14 @@ require('lazy').setup({
         },
       },
     },
+    config = function()
+      vim.api.nvim_create_autocmd({ "BufWritePost", "BufEnter", "InsertLeave" }, {
+        pattern = { "*.js", "*.ts", "*.jsx", "*.tsx", "*.py" },
+        callback = function()
+          require("lint").try_lint()
+        end,
+      })
+    end,
   },
 
   -- Make sure Biome is globally installed
@@ -415,18 +424,6 @@ require('lazy').setup({
     },
   },
 
-  -- Automatically trigger linting
-  {
-    "nvim-lint/nvim-lint",
-    config = function()
-      vim.api.nvim_create_autocmd({ "BufWritePost", "BufEnter", "InsertLeave" }, {
-        pattern = { "*.js", "*.ts", "*.jsx", "*.tsx", "*.py" },
-        callback = function()
-          require("lint").try_lint()
-        end,
-      })
-    end,
-  },
 
   -- NOTE: Next Step on Your Neovim Journey: Add/Configure additional "plugins" for kickstart
   --       These are some example plugins that I've included in the kickstart repository.
